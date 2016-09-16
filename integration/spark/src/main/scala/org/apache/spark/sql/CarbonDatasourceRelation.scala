@@ -244,7 +244,10 @@ case class CarbonRelation(
           nullable = true)(qualifiers = tableName +: alias.toSeq))
   }
 
-  override val output = dimensionsAttr ++ measureAttr
+  override val output = dimensionsAttr ++ Seq(AttributeReference(
+        "positionId",
+        CarbonMetastoreTypes.toDataType("string"),
+        nullable = true)(qualifiers = tableName +: alias.toSeq)) ++ measureAttr
 
   // TODO: Use data from the footers.
   override lazy val statistics = Statistics(sizeInBytes = this.sizeInBytes)

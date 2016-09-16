@@ -1014,7 +1014,8 @@ public final class CarbonUtil {
     boolean[] dictionaryEncodingArray = new boolean[queryDimensions.length];
     for (int i = 0; i < queryDimensions.length; i++) {
       dictionaryEncodingArray[i] =
-          queryDimensions[i].getDimension().hasEncoding(Encoding.DICTIONARY);
+          !queryDimensions[i].getColumnName().equalsIgnoreCase("positionId") && queryDimensions[i]
+              .getDimension().hasEncoding(Encoding.DICTIONARY);
     }
     return dictionaryEncodingArray;
   }
@@ -1023,16 +1024,26 @@ public final class CarbonUtil {
     boolean[] dictionaryEncodingArray = new boolean[queryDimensions.length];
     for (int i = 0; i < queryDimensions.length; i++) {
       dictionaryEncodingArray[i] =
-          queryDimensions[i].getDimension().hasEncoding(Encoding.DIRECT_DICTIONARY);
+          !queryDimensions[i].getColumnName().equalsIgnoreCase("positionId") && queryDimensions[i]
+              .getDimension().hasEncoding(Encoding.DIRECT_DICTIONARY);
     }
     return dictionaryEncodingArray;
+  }
+
+  public static boolean[] getImplicitColumnArray(QueryDimension[] queryDimensions) {
+    boolean[] implicitColumnArray = new boolean[queryDimensions.length];
+    for (int i = 0; i < queryDimensions.length; i++) {
+      implicitColumnArray[i] = queryDimensions[i].getColumnName().equalsIgnoreCase("positionId");
+    }
+    return implicitColumnArray;
   }
 
   public static boolean[] getComplexDataTypeArray(QueryDimension[] queryDimensions) {
     boolean[] dictionaryEncodingArray = new boolean[queryDimensions.length];
     for (int i = 0; i < queryDimensions.length; i++) {
       dictionaryEncodingArray[i] =
-          CarbonUtil.hasComplexDataType(queryDimensions[i].getDimension().getDataType());
+          !queryDimensions[i].getColumnName().equalsIgnoreCase("positionId") && CarbonUtil
+              .hasComplexDataType(queryDimensions[i].getDimension().getDataType());
     }
     return dictionaryEncodingArray;
   }

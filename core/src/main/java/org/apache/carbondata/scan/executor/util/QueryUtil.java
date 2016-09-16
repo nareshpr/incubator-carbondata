@@ -90,7 +90,8 @@ public class QueryUtil {
       // are not selected in the mdkey
       // so we will not select the those dimension for calculating the
       // range
-      if (queryDimensions.get(i).getDimension().getKeyOrdinal() == -1) {
+      if (queryDimensions.get(i).getColumnName().equalsIgnoreCase("positionId") ||
+            queryDimensions.get(i).getDimension().getKeyOrdinal() == -1) {
         continue;
       }
       // get the offset of the dimension in the mdkey
@@ -174,7 +175,8 @@ public class QueryUtil {
       // are not selected in the mdkey
       // so we will not select the those dimension for calculating the
       // range
-      if (queryDimensions.get(i).getDimension().getKeyOrdinal() == -1) {
+      if (queryDimensions.get(i).getColumnName().equalsIgnoreCase("positionId") ||
+            queryDimensions.get(i).getDimension().getKeyOrdinal() == -1) {
         continue;
       }
       // adding for dimension which is selected in query
@@ -216,6 +218,9 @@ public class QueryUtil {
     Set<Integer> dimensionBlockIndex = new HashSet<Integer>();
     int blockIndex = 0;
     for (int i = 0; i < queryDimensions.size(); i++) {
+      if (queryDimensions.get(i).getColumnName().equalsIgnoreCase("positionId")) {
+        continue;
+      }
       blockIndex =
           dimensionOrdinalToBlockMapping.get(queryDimensions.get(i).getDimension().getOrdinal());
       dimensionBlockIndex.add(blockIndex);
@@ -270,18 +275,20 @@ public class QueryUtil {
     // direct dictionary skip is done only for the dictionary lookup
     Set<String> dictionaryDimensionFromQuery = new HashSet<String>();
     for (int i = 0; i < queryDimensions.size(); i++) {
-      List<Encoding> encodingList = queryDimensions.get(i).getDimension().getEncoder();
-      // TODO need to remove the data type check for parent column in complex type no need to
-      // write encoding dictionary
-      if (CarbonUtil.hasEncoding(encodingList, Encoding.DICTIONARY) && !CarbonUtil
-          .hasEncoding(encodingList, Encoding.DIRECT_DICTIONARY)) {
+      if (!queryDimensions.get(i).getColumnName().equalsIgnoreCase("positionId")) {
+        List<Encoding> encodingList = queryDimensions.get(i).getDimension().getEncoder();
+        // TODO need to remove the data type check for parent column in complex type no need to
+        // write encoding dictionary
+        if (CarbonUtil.hasEncoding(encodingList, Encoding.DICTIONARY) && !CarbonUtil
+            .hasEncoding(encodingList, Encoding.DIRECT_DICTIONARY)) {
 
-        if (queryDimensions.get(i).getDimension().numberOfChild() == 0) {
-          dictionaryDimensionFromQuery.add(queryDimensions.get(i).getDimension().getColumnId());
-        }
-        if (queryDimensions.get(i).getDimension().numberOfChild() > 0) {
-          getChildDimensionDictionaryDetail(queryDimensions.get(i).getDimension(),
-              dictionaryDimensionFromQuery);
+          if (queryDimensions.get(i).getDimension().numberOfChild() == 0) {
+            dictionaryDimensionFromQuery.add(queryDimensions.get(i).getDimension().getColumnId());
+          }
+          if (queryDimensions.get(i).getDimension().numberOfChild() > 0) {
+            getChildDimensionDictionaryDetail(queryDimensions.get(i).getDimension(),
+                dictionaryDimensionFromQuery);
+          }
         }
       }
     }
@@ -607,8 +614,12 @@ public class QueryUtil {
     Collections.sort(dimensions, new Comparator<QueryDimension>() {
 
       @Override public int compare(QueryDimension o1, QueryDimension o2) {
-        return Integer
-            .compare(o1.getDimension().columnGroupId(), o2.getDimension().columnGroupId());
+        return o1.getColumnName().equalsIgnoreCase("positionId") ?
+            -1 :
+            o1.getColumnName().equalsIgnoreCase("positionId") ?
+                1 :
+                Integer
+                    .compare(o1.getDimension().columnGroupId(), o2.getDimension().columnGroupId());
       }
     });
     // list of row groups this will store all the row group column
@@ -626,7 +637,10 @@ public class QueryUtil {
       // column group id
       // then we need to add ordinal of that column as it belongs to same
       // column group
-      if (!dimensions.get(index).getDimension().isColumnar()
+      if (dimensions.get(index).getColumnName().equalsIgnoreCase("positionId")) {
+        index++;
+        continue;
+      } else if (!dimensions.get(index).getDimension().isColumnar()
           && dimensions.get(index).getDimension().columnGroupId() == prvColumnGroupId
           && null != currentColumnGroup) {
         currentColumnGroup.add(dimensions.get(index).getDimension().getOrdinal());
@@ -687,8 +701,11 @@ public class QueryUtil {
       Map<Integer, Integer> columnOrdinalToBlockIndexMapping,
       Set<Integer> dictionaryDimensionBlockIndex, List<Integer> noDictionaryDimensionBlockIndex) {
     for (QueryDimension queryDimension : queryDimensions) {
-      if (CarbonUtil.hasEncoding(queryDimension.getDimension().getEncoder(), Encoding.DICTIONARY)
-          && queryDimension.getDimension().numberOfChild() == 0) {
+      if (queryDimension.getColumnName().equalsIgnoreCase("positionId")) {
+        continue;
+      } else if (
+          CarbonUtil.hasEncoding(queryDimension.getDimension().getEncoder(), Encoding.DICTIONARY)
+              && queryDimension.getDimension().numberOfChild() == 0) {
         dictionaryDimensionBlockIndex
             .add(columnOrdinalToBlockIndexMapping.get(queryDimension.getDimension().getOrdinal()));
       } else if (queryDimension.getDimension().numberOfChild() == 0) {
@@ -846,7 +863,8 @@ public class QueryUtil {
     Map<Integer, GenericQueryType> complexTypeMap = new HashMap<Integer, GenericQueryType>();
     for (QueryDimension dimension : queryDimensions) {
       CarbonDimension actualDimension = dimension.getDimension();
-      if (actualDimension.getNumberOfChild() == 0) {
+      if (dimension.getColumnName().equalsIgnoreCase("positionId")
+          || actualDimension.getNumberOfChild() == 0) {
         continue;
       }
       fillParentDetails(dimensionToBlockIndexMap, actualDimension, complexTypeMap,

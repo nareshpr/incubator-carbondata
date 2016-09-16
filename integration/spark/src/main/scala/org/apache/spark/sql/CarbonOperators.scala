@@ -91,13 +91,15 @@ case class CarbonScan(
 
     val dimensions = carbonTable.getDimensionByTableName(carbonTable.getFactTableName)
     val measures = carbonTable.getMeasureByTableName(carbonTable.getFactTableName)
-    val dimAttr = new Array[Attribute](dimensions.size())
+    val dimAttr = new Array[Attribute](dimensions.size() + 1)
     val msrAttr = new Array[Attribute](measures.size())
     attributesRaw.foreach { attr =>
       val carbonDimension =
         carbonTable.getDimensionByName(carbonTable.getFactTableName, attr.name)
       if(carbonDimension != null) {
         dimAttr(dimensions.indexOf(carbonDimension)) = attr
+      } else if (attr.name.equalsIgnoreCase("positionId")) {
+        dimAttr(dimensions.size()) = attr
       } else {
         val carbonMeasure =
           carbonTable.getMeasureByName(carbonTable.getFactTableName, attr.name)
@@ -114,6 +116,11 @@ case class CarbonScan(
       val carbonDimension =
         carbonTable.getDimensionByName(carbonTable.getFactTableName, attr.name)
       if (carbonDimension != null) {
+        val dim = new QueryDimension(attr.name)
+        dim.setQueryOrder(queryOrder)
+        queryOrder = queryOrder + 1
+        selectedDims += dim
+      } else if (attr.name.equalsIgnoreCase("positionId")) {
         val dim = new QueryDimension(attr.name)
         dim.setQueryOrder(queryOrder)
         queryOrder = queryOrder + 1

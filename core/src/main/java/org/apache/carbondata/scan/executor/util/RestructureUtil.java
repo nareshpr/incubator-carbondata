@@ -49,9 +49,13 @@ public class RestructureUtil {
         new ArrayList<QueryDimension>(CarbonCommonConstants.DEFAULT_COLLECTION_SIZE);
     // selecting only those dimension which is present in the query
     for (QueryDimension queryDimimension : queryDimensions) {
-      for (CarbonDimension tableDimension : tableBlockDimensions) {
-        if (tableDimension.equals(queryDimimension.getDimension())) {
-          presentDimension.add(queryDimimension);
+      if (queryDimimension.getColumnName().equalsIgnoreCase("positionId")) {
+        presentDimension.add(queryDimimension);
+      } else {
+        for (CarbonDimension tableDimension : tableBlockDimensions) {
+          if (tableDimension.equals(queryDimimension.getDimension())) {
+            presentDimension.add(queryDimimension);
+          }
         }
       }
     }

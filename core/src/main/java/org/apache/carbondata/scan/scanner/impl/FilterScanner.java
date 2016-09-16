@@ -18,6 +18,7 @@
  */
 package org.apache.carbondata.scan.scanner.impl;
 
+import java.io.File;
 import java.util.BitSet;
 
 import org.apache.carbondata.core.carbon.datastore.chunk.DimensionColumnDataChunk;
@@ -108,6 +109,8 @@ public class FilterScanner extends AbstractBlockletScanner {
       throws FilterUnsupportedException {
 
     scannedResult.reset();
+    scannedResult.setBlockletId(blockExecutionInfo.getBlockId() + File.separator
+            + blocksChunkHolder.getDataBlock().nodeNumber());
     // apply min max
     if (isMinMaxEnabled) {
       BitSet bitSet = this.filterExecuter

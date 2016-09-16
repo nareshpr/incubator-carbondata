@@ -96,6 +96,11 @@ public abstract class AbstractScannedResult {
   private int totalDimensionsSize;
 
   /**
+   * blockedId which will be blockId + blocklet number in the block
+   */
+  private String blockletId;
+
+  /**
    * parent block indexes
    */
   private int[] complexParentBlockIndexes;
@@ -229,6 +234,20 @@ public abstract class AbstractScannedResult {
           new String(dataChunks[noDictionaryColumnBlockIndexes[i]].getChunkData(rowId));
     }
     return noDictionaryColumnsKeys;
+  }
+
+  /**
+   * @return blockletId
+   */
+  public String getBlockletId() {
+    return blockletId;
+  }
+
+  /**
+   * @param blockletId
+   */
+  public void setBlockletId(String blockletId) {
+    this.blockletId = blockletId;
   }
 
   /**

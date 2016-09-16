@@ -65,6 +65,11 @@ public class BlockExecutionInfo {
   private String queryId;
 
   /**
+   * blockId which will be used in implicit column like blockletId/positionId and tupleId
+   */
+  private String blockId;
+
+  /**
    * this to handle limit query in case of detail query we are pushing down
    * the limit to executor level so based on the number of limit we can
    * process only that many records
@@ -288,6 +293,20 @@ public class BlockExecutionInfo {
    */
   public void setQueryId(String queryId) {
     this.queryId = queryId;
+  }
+
+  /**
+   * @return the blockId
+   */
+  public String getBlockId() {
+    return blockId;
+  }
+
+  /**
+   * @param blockId the blockId to set
+   */
+  public void setBlockId(String blockId) {
+    this.blockId = blockId;
   }
 
   /**

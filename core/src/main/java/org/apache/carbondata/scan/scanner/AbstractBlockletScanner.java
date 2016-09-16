@@ -18,6 +18,8 @@
  */
 package org.apache.carbondata.scan.scanner;
 
+import java.io.File;
+
 import org.apache.carbondata.scan.executor.exception.QueryExecutionException;
 import org.apache.carbondata.scan.executor.infos.BlockExecutionInfo;
 import org.apache.carbondata.scan.processor.BlocksChunkHolder;
@@ -50,6 +52,8 @@ public abstract class AbstractBlockletScanner implements BlockletScanner {
 
   protected void fillKeyValue(BlocksChunkHolder blocksChunkHolder) {
     scannedResult.reset();
+    scannedResult.setBlockletId(blockExecutionInfo.getBlockId() + File.separator
+            + blocksChunkHolder.getDataBlock().nodeNumber());
     scannedResult.setMeasureChunks(blocksChunkHolder.getDataBlock()
         .getMeasureChunks(blocksChunkHolder.getFileReader(),
             blockExecutionInfo.getAllSelectedMeasureBlocksIndexes()));

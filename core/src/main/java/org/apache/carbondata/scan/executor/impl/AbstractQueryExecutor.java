@@ -37,6 +37,7 @@ import org.apache.carbondata.core.carbon.metadata.datatype.DataType;
 import org.apache.carbondata.core.carbon.metadata.encoder.Encoding;
 import org.apache.carbondata.core.carbon.metadata.schema.table.column.CarbonDimension;
 import org.apache.carbondata.core.carbon.metadata.schema.table.column.CarbonMeasure;
+import org.apache.carbondata.core.carbon.path.CarbonStorePath;
 import org.apache.carbondata.core.carbon.querystatistics.QueryStatistic;
 import org.apache.carbondata.core.carbon.querystatistics.QueryStatisticsConstants;
 import org.apache.carbondata.core.carbon.querystatistics.QueryStatisticsRecorder;
@@ -203,8 +204,8 @@ public abstract class AbstractQueryExecutor<E> implements QueryExecutor<E> {
       blockExecutionInfoList.add(
           getBlockExecutionInfoForBlock(queryModel, queryProperties.dataBlocks.get(i),
               queryModel.getTableBlockInfos().get(i).getBlockletInfos().getStartBlockletNumber(),
-              queryModel.getTableBlockInfos().get(i).getBlockletInfos()
-                  .getNumberOfBlockletToScan()));
+              queryModel.getTableBlockInfos().get(i).getBlockletInfos().getNumberOfBlockletToScan(),
+              queryModel.getTableBlockInfos().get(i).getFilePath()));
     }
     queryProperties.complexDimensionInfoMap =
         blockExecutionInfoList.get(blockExecutionInfoList.size() - 1).getComlexDimensionInfoMap();
@@ -227,7 +228,7 @@ public abstract class AbstractQueryExecutor<E> implements QueryExecutor<E> {
    * @throws QueryExecutionException any failure during block info creation
    */
   protected BlockExecutionInfo getBlockExecutionInfoForBlock(QueryModel queryModel,
-      AbstractIndex blockIndex, int startBlockletIndex, int numberOfBlockletToScan)
+      AbstractIndex blockIndex, int startBlockletIndex, int numberOfBlockletToScan, String filePath)
       throws QueryExecutionException {
     BlockExecutionInfo blockExecutionInfo = new BlockExecutionInfo();
     SegmentProperties segmentProperties = blockIndex.getSegmentProperties();
@@ -244,6 +245,11 @@ public abstract class AbstractQueryExecutor<E> implements QueryExecutor<E> {
         QueryUtil.getMaskedByteRange(updatedQueryDimension, blockKeyGenerator);
     int[] maksedByte =
         QueryUtil.getMaskedByte(blockKeyGenerator.getKeySizeInBytes(), maskByteRangesForBlock);
+    int tableFactPathLength = CarbonStorePath
+        .getCarbonTablePath(queryModel.getAbsoluteTableIdentifier().getStorePath(),
+            queryModel.getAbsoluteTableIdentifier().getCarbonTableIdentifier()).getFactDir()
+        .length() + 1;
+    blockExecutionInfo.setBlockId(filePath.substring(tableFactPathLength));
     blockExecutionInfo.setStartBlockletIndex(startBlockletIndex);
     blockExecutionInfo.setNumberOfBlockletToScan(numberOfBlockletToScan);
     blockExecutionInfo.setQueryDimensions(
@@ -372,7 +378,9 @@ public abstract class AbstractQueryExecutor<E> implements QueryExecutor<E> {
         new ArrayList<Integer>(CarbonCommonConstants.DEFAULT_COLLECTION_SIZE);
     int counter = 0;
     while (counter < queryDimension.size()) {
-      if (queryDimension.get(counter).getDimension().numberOfChild() > 0) {
+      if (queryDimension.get(counter).getColumnName().equalsIgnoreCase("positionId")) {
+        counter++;
+      } else if (queryDimension.get(counter).getDimension().numberOfChild() > 0) {
         counter += queryDimension.get(counter).getDimension().numberOfChild();
         continue;
       } else if (!CarbonUtil.hasEncoding(queryDimension.get(counter).getDimension().getEncoder(),
@@ -418,7 +426,9 @@ public abstract class AbstractQueryExecutor<E> implements QueryExecutor<E> {
   private int[] getComplexDimensionParentBlockIndexes(List<QueryDimension> queryDimensions) {
     List<Integer> parentBlockIndexList = new ArrayList<Integer>();
     for (QueryDimension queryDimension : queryDimensions) {
-      if (CarbonUtil.hasDataType(queryDimension.getDimension().getDataType(),
+      if (queryDimension.getColumnName().equalsIgnoreCase("positionId")) {
+        continue;
+      } else if (CarbonUtil.hasDataType(queryDimension.getDimension().getDataType(),
           new DataType[] { DataType.ARRAY, DataType.STRUCT, DataType.MAP })) {
         parentBlockIndexList.add(queryDimension.getDimension().getOrdinal());
       }
